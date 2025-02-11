@@ -97,13 +97,13 @@ namespace LibraryManagerAPI.Extensions
                 }
             };*/
 
-            builder.Services.AddAuthorization(opt =>
+            builder.Services.AddAuthorization(options =>
             {
-                opt.AddPolicy("NoAuthenticated", p =>
+                options.AddPolicy("NoAuthenticated", p =>
                 {
-                    p.RequireAssertion(ctx =>
+                    p.RequireAssertion(context =>
                     {
-                        return !ctx.User.Identity!.IsAuthenticated;
+                        return !context.User.Identity!.IsAuthenticated;
                     });
                 });
             });
