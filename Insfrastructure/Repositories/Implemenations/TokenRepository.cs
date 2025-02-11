@@ -1,9 +1,10 @@
 ﻿using Core.Entities;
+using Core.RepositoriesContracts;
 using Infrastructure.DB;
 
 namespace Infrastructure.Repositories.Implemenations
 {
-    public class TokenRepository
+    public class TokenRepository : ITokenRepository
     {
         private readonly LibraryDbContext _context;
         public TokenRepository(LibraryDbContext context)
