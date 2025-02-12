@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Core.Helpers;
 using Core.RepositoriesContracts;
 using Core.Services.Contracts;
 
@@ -8,33 +9,52 @@ namespace Core.Services.Implementations
     {
         private readonly IBookRepository _bookRepository;
         private readonly IBorrowingRecordRepository _borrowingRecordRepository;
+        private readonly ServicesHelpers _servicesHelpers;
 
-        public BorrowingRecordService(IBorrowingRecordRepository borrowingRecordRepository, IBookRepository bookRepository)
+        public BorrowingRecordService(IBorrowingRecordRepository borrowingRecordRepository,
+            IBookRepository bookRepository,
+            ServicesHelpers servicesHelpers)
         {
             _borrowingRecordRepository = borrowingRecordRepository;
             _bookRepository = bookRepository;
+            _servicesHelpers = servicesHelpers;
         }
 
-        public async Task<IEnumerable<BorrowingRecord>> GetAllBorrowingRecordsAsync()
+        public async Task<List<BorrowingRecord>> GetAllBorrowingRecordsAsync()
             => await _borrowingRecordRepository.GetAllBorrowingRecordsAsync();
 
         public async Task<BorrowingRecord?> GetBorrowingRecordByIdAsync(Guid id)
-            => await _borrowingRecordRepository.GetBorrowingRecordByIdAsync(id);
+        {
+            await _servicesHelpers.ThrowIfBorrowingRecordDoesNotExist(id);
+            return await _borrowingRecordRepository.GetBorrowingRecordByIdAsync(id);
+        }
 
-        public async Task<IEnumerable<BorrowingRecord>> GetBorrowingRecordsByUserAsync(Guid userId)
-            => await _borrowingRecordRepository.GetBorrowingRecordsByUserAsync(userId);
+        public async Task<List<BorrowingRecord>> GetBorrowingRecordsByUserAsync(Guid userId)
+        {
+            await _servicesHelpers.ThrowIfUserDoesNotExist(userId);
+            return await _borrowingRecordRepository.GetBorrowingRecordsByUserAsync(userId);
+        }
 
-        public async Task AddBorrowingRecordAsync(BorrowingRecord record)
+        public async Task<BorrowingRecord> AddBorrowingRecordAsync(BorrowingRecord record)
             => await _borrowingRecordRepository.AddBorrowingRecordAsync(record);
 
-        public async Task UpdateBorrowingRecordAsync(BorrowingRecord record)
-            => await _borrowingRecordRepository.UpdateBorrowingRecordAsync(record);
+        public async Task<BorrowingRecord> UpdateBorrowingRecordAsync(BorrowingRecord record)
+        {
+            await _servicesHelpers.ThrowIfBorrowingRecordDoesNotExist(record.Id);
+            return await _borrowingRecordRepository.UpdateBorrowingRecordAsync(record);
+        }
 
-        public async Task DeleteBorrowingRecordAsync(Guid id)
-            => await _borrowingRecordRepository.DeleteBorrowingRecordAsync(id);
+        public async Task<bool> DeleteBorrowingRecordAsync(Guid id)
+        {
+            await _servicesHelpers.ThrowIfBorrowingRecordDoesNotExist(id);
+            return await _borrowingRecordRepository.DeleteBorrowingRecordAsync(id);
+        }
 
         public async Task<(bool Success, string Message, BorrowingRecord? BorrowingRecord)> BorrowBookAsync(Guid bookId, Guid userId)
         {
+            await _servicesHelpers.ThrowIfUserDoesNotExist(userId);
+            await _servicesHelpers.ThrowIfBookDoesNotExist(bookId);
+
             var book = await _bookRepository.GetBookByIdAsync(bookId);
             if (book == null || !book.IsAvailable)
             {

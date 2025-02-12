@@ -4,11 +4,11 @@ namespace Core.RepositoriesContracts
 {
     public interface IBorrowingRecordRepository
     {
-        Task<IEnumerable<BorrowingRecord>> GetAllBorrowingRecordsAsync();
+        Task<List<BorrowingRecord>> GetAllBorrowingRecordsAsync();
         Task<BorrowingRecord?> GetBorrowingRecordByIdAsync(Guid id);
-        Task<IEnumerable<BorrowingRecord>> GetBorrowingRecordsByUserAsync(Guid userId);
-        Task AddBorrowingRecordAsync(BorrowingRecord record);
-        Task UpdateBorrowingRecordAsync(BorrowingRecord record);
-        Task DeleteBorrowingRecordAsync(Guid id);
+        Task<List<BorrowingRecord>> GetBorrowingRecordsByUserAsync(Guid userId);
+        Task<BorrowingRecord> AddBorrowingRecordAsync(BorrowingRecord record);
+        Task<BorrowingRecord> UpdateBorrowingRecordAsync(BorrowingRecord record);
+        Task<bool> DeleteBorrowingRecordAsync(Guid id);
     }
 }

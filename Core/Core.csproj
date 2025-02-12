@@ -8,14 +8,12 @@
 
   <ItemGroup>
     <Folder Include="DTOs\" />
-    <Folder Include="Enums\" />
-    <Folder Include="Services\Contracts\" />
-    <Folder Include="Services\Implementations\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Mailkit" Version="4.10.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
   </ItemGroup>
 
