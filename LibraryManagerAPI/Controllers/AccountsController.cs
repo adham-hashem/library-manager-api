@@ -5,7 +5,7 @@ namespace LibraryManagerAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AccountController : ControllerBase
+    public class AccountsController : ControllerBase
     {
     }
 }

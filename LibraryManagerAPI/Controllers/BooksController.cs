@@ -22,9 +22,15 @@ namespace LibraryManagerAPI.Controllers
         /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> GetAllBooks()
+        {
+            try
             {
-            var books = await _bookService.GetAllBooksAsync();
-            return Ok(books);
+                return Ok(await _bookService.GetAllBooksAsync());
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message, statusCode: 400);
+            }
         }
 
         /// <summary>
@@ -35,11 +41,14 @@ namespace LibraryManagerAPI.Controllers
         [HttpGet("{id:guid}", Name = "GetBookById")]
         public async Task<IActionResult> GetBookById(Guid id)
         {
-            var book = await _bookService.GetBookByIdAsync(id);
-            if (book == null)
-                return NotFound(new { message = "Book not found" });
-
-            return Ok(book);
+            try
+            {
+                return Ok(await _bookService.GetBookByIdAsync(id));
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message, statusCode: 400);
+            }
         }
 
         /// <summary>
