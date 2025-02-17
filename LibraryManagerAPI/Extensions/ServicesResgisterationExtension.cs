@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Core.Helpers;
 using Core.RepositoriesContracts;
 using Core.Services.Contracts;
 using Core.Services.Implementations;
@@ -29,59 +30,60 @@ namespace LibraryManagerAPI.Extensions
             });
 
 
-            // Register repositories
-            builder.Services.AddScoped<IBookRepository, BookRepository>();
-            builder.Services.AddScoped<IBorrowingRecordRepository, BorrowingRecordRepository>();
-            builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+                // Register repositories
+                builder.Services.AddScoped<IBookRepository, BookRepository>();
+                builder.Services.AddScoped<IBorrowingRecordRepository, BorrowingRecordRepository>();
+                builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 
 
-            // Regiseter services
-            builder.Services.AddScoped<IBookService, BookService>();
-            builder.Services.AddScoped<IBorrowingRecordService, BorrowingRecordService>();
-            builder.Services.AddScoped<IJwtServices, JwtServices>();
+                // Regiseter services
+                builder.Services.AddScoped<IBookService, BookService>();
+                builder.Services.AddScoped<IBorrowingRecordService, BorrowingRecordService>();
+                builder.Services.AddScoped<IJwtServices, JwtServices>();
+                builder.Services.AddScoped<ServicesHelpers>();
 
-            // Identity
-            builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
-                .AddDefaultTokenProviders()
-                .AddEntityFrameworkStores<LibraryDbContext>()
-                .AddUserStore<UserStore<ApplicationUser, ApplicationRole, LibraryDbContext, Guid>>()
-                .AddRoleStore<RoleStore<ApplicationRole, LibraryDbContext, Guid>>();
+                // Identity
+                builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
+                    .AddDefaultTokenProviders()
+                    .AddEntityFrameworkStores<LibraryDbContext>()
+                    .AddUserStore<UserStore<ApplicationUser, ApplicationRole, LibraryDbContext, Guid>>()
+                    .AddRoleStore<RoleStore<ApplicationRole, LibraryDbContext, Guid>>();
 
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = false;
-
-                options.TokenValidationParameters = new TokenValidationParameters()
+                builder.Services.AddAuthentication(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidIssuer = Environment.GetEnvironmentVariable("LIBRARYMANAGER_DEV_JWT_ISSUER"),
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("LIBRARYMANAGER_DEV_JWT_SECRET")!))
-                };
-
-                options.Events = new JwtBearerEvents()
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                }).AddJwtBearer(options =>
                 {
-                    OnTokenValidated = async context =>
+                    options.RequireHttpsMetadata = false;
+
+                    options.TokenValidationParameters = new TokenValidationParameters()
                     {
-                        var token = context.HttpContext.Request.Headers.Authorization.ToString().Split(" ")[1];
-                        if (token != null)
+                        ValidateIssuer = true,
+                        ValidIssuer = Environment.GetEnvironmentVariable("LIBRARYMANAGER_DEV_JWT_ISSUER"),
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("LIBRARYMANAGER_DEV_JWT_SECRET")!))
+                    };
+
+                    options.Events = new JwtBearerEvents()
+                    {
+                        OnTokenValidated = async context =>
                         {
-                            var tokenService = context.HttpContext.RequestServices.GetRequiredService<IJwtServices>();
-                            if (tokenService.IsExpiredToken(token))
+                            var token = context.HttpContext.Request.Headers.Authorization.ToString().Split(" ")[1];
+                            if (token != null)
                             {
-                                context.Fail("Expired Token");
+                                var tokenService = context.HttpContext.RequestServices.GetRequiredService<IJwtServices>();
+                                if (tokenService.IsExpiredToken(token))
+                                {
+                                    context.Fail("Expired Token");
+                                }
                             }
                         }
-                    }
-                };
-            });
+                    };
+                });
 
 /*            options.Events = new JwtBearerEvents
             {
