@@ -1,28 +1,38 @@
 ﻿using Core.Services.Contracts;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
-using MailKit.Net.Smtp;
+using System.Net;
+using System.Net.Mail;
 
 namespace Core.Services.Implementations
 {
     public class EmailService : IEmailService
     {
-        private readonly IConfiguration _config;
-        public EmailService(IConfiguration config)
+        public async Task SendEmailAsync(string to, string subject, string body)
         {
-            _config = config;
-        }
+            var useSSL = bool.TryParse(Environment.GetEnvironmentVariable("SMTP_USESSL"), out var result) ? result : true;
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
-        {
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Library", _config["EmailSettings:SenderEmail"]));
-            message.To.Add(new MailboxAddress("", toEmail));
-            message.Subject = subject;
-            message.Body = new TextPart("html") { Text = body };
+            var SmtpClient = new SmtpClient(Environment.GetEnvironmentVariable("SMTP_SERVER"))
+            {
+                Port = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT")!),
+                Credentials = new NetworkCredential(
+                    Environment.GetEnvironmentVariable("SMTP_EMAIL"),
+                    Environment.GetEnvironmentVariable("SMTP_PASSWORD")
+                    ),
+                EnableSsl = useSSL
+            };
 
-            SmtpClient client = new SmtpClient();
-            //await client.ConnectAsync(_config["EmailSettings:SmtpServer"], int.Parse(_config["EmailSettings:Port"]), _config["EmailSettings:UseSSL"]);
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(Environment.GetEnvironmentVariable("SMTP_EMAIL")!),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
+            };
+
+            mailMessage.To.Add(to);
+
+            await SmtpClient.SendMailAsync(mailMessage);
         }
     }
 }

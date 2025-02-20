@@ -93,6 +93,12 @@ namespace LibraryManagerAPI.Controllers
             return Ok();
         }
 
+
+        /// <summary>
+        /// Login in with an account
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [Route("login")]
         [HttpPost]
         [Authorize("NoAuthenticated")]
@@ -116,5 +122,8 @@ namespace LibraryManagerAPI.Controllers
                 return Problem("Login failed, Try again with the correct login credentials", statusCode: 400);
             }
         }
+
+
+
     }
 }
