@@ -18,17 +18,20 @@ namespace LibraryManagerAPI.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly IJwtServices _jwtServices;
+        private readonly IEmailService _emailService;
 
         public AccountsController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<ApplicationRole> roleManager,
-            IJwtServices jwtServices)
+            IJwtServices jwtServices,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _jwtServices = jwtServices;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -93,7 +96,6 @@ namespace LibraryManagerAPI.Controllers
             return Ok();
         }
 
-
         /// <summary>
         /// Login in with an account
         /// </summary>
@@ -123,7 +125,49 @@ namespace LibraryManagerAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Forgot password and send reset link
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPasswordAsync(ForgotPasswordRequestDto request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+                return Problem("User not found", statusCode: 400);
 
+            var token = await _userManager.FindByEmailAsync(request.Email);
+            var resetLink = $"https://domain.com/reset-password?email={request.Email}&token={token}";
 
+            string subject = "Reset your password";
+            string body = $"Click the link below to reset your password:<br><a href='{resetLink}'";
+
+            await _emailService.SendEmailAsync(user.Email!, subject, body);
+
+            return Ok("Password reset link has been sent to your email.");
+        }
+
+        /// <summary>
+        /// Reset password using reset link sent to your email
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPasswordAsync(ResetPasswordDto request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+                return Problem("User not found.", statusCode: 400);
+
+            var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(" ,\n", result.Errors.Select(e => e.Description));
+                return Problem(errors, statusCode: 400);
+            }
+
+            return Ok("Password has been reset successfully.");
+        }
     }
 }
